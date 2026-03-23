@@ -6,38 +6,42 @@ import * as io from '@actions/io';
 
 import fs from 'fs';
 import path from 'path';
+import {fileURLToPath} from 'url';
+import {jest} from '@jest/globals';
 import osm from 'os';
 
-import each from 'jest-each';
+import * as main from '../src/main.js';
+import * as util from '../src/util.js';
+import OfficialBuilds from '../src/distributions/official_builds/official_builds.js';
 
-import * as main from '../src/main';
-import * as util from '../src/util';
-import OfficialBuilds from '../src/distributions/official_builds/official_builds';
+type SpyInstance = jest.SpiedFunction<(...args: any[]) => any>;
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('main tests', () => {
   let inputs = {} as any;
   let os = {} as any;
 
-  let infoSpy: jest.SpyInstance;
-  let warningSpy: jest.SpyInstance;
-  let saveStateSpy: jest.SpyInstance;
-  let inSpy: jest.SpyInstance;
-  let setOutputSpy: jest.SpyInstance;
-  let startGroupSpy: jest.SpyInstance;
-  let endGroupSpy: jest.SpyInstance;
+  let infoSpy: SpyInstance;
+  let warningSpy: SpyInstance;
+  let saveStateSpy: SpyInstance;
+  let inSpy: SpyInstance;
+  let setOutputSpy: SpyInstance;
+  let startGroupSpy: SpyInstance;
+  let endGroupSpy: SpyInstance;
 
-  let whichSpy: jest.SpyInstance;
+  let whichSpy: SpyInstance;
 
-  let existsSpy: jest.SpyInstance;
+  let existsSpy: SpyInstance;
 
-  let getExecOutputSpy: jest.SpyInstance;
+  let getExecOutputSpy: SpyInstance;
 
-  let getNodeVersionFromFileSpy: jest.SpyInstance;
-  let cnSpy: jest.SpyInstance;
-  let findSpy: jest.SpyInstance;
-  let isCacheActionAvailable: jest.SpyInstance;
+  let getNodeVersionFromFileSpy: SpyInstance;
+  let cnSpy: SpyInstance;
+  let findSpy: SpyInstance;
+  let isCacheActionAvailable: SpyInstance;
 
-  let setupNodeJsSpy: jest.SpyInstance;
+  let setupNodeJsSpy: SpyInstance;
 
   beforeEach(() => {
     inputs = {};
@@ -93,7 +97,7 @@ describe('main tests', () => {
   }, 100000);
 
   describe('getNodeVersionFromFile', () => {
-    each`
+    it.each`
       contents                                                                                   | expected
       ${'12'}                                                                                    | ${'12'}
       ${'12.3'}                                                                                  | ${'12.3'}
@@ -112,7 +116,7 @@ describe('main tests', () => {
       ${'{"engines": {"node": "17.0.0"}}'}                                                       | ${'17.0.0'}
       ${'{"devEngines": {"runtime": {"name": "node", "version": "22.0.0"}}}'}                    | ${'22.0.0'}
       ${'{"devEngines": {"runtime": [{"name": "bun"}, {"name": "node", "version": "22.0.0"}]}}'} | ${'22.0.0'}
-    `.it('parses "$contents"', ({contents, expected}) => {
+    `('parses "$contents"', ({contents, expected}) => {
       const existsSpy = jest.spyOn(fs, 'existsSync');
       existsSpy.mockImplementation(() => true);
 

@@ -3,10 +3,16 @@ import * as cache from '@actions/cache';
 import * as glob from '@actions/glob';
 import fs from 'fs';
 import path from 'path';
+import {fileURLToPath} from 'url';
+import {jest} from '@jest/globals';
 
-import * as utils from '../src/cache-utils';
-import {run} from '../src/cache-save';
-import {State} from '../src/constants';
+import * as utils from '../src/cache-utils.js';
+import {run} from '../src/cache-save.js';
+import {State} from '../src/constants.js';
+
+type SpyInstance = jest.SpiedFunction<(...args: any[]) => any>;
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('run', () => {
   const yarnFileHash =
@@ -20,16 +26,16 @@ describe('run', () => {
 
   const inputs = {} as any;
 
-  let getInputSpy: jest.SpyInstance;
-  let infoSpy: jest.SpyInstance;
-  let warningSpy: jest.SpyInstance;
-  let debugSpy: jest.SpyInstance;
-  let setFailedSpy: jest.SpyInstance;
-  let getStateSpy: jest.SpyInstance;
-  let saveCacheSpy: jest.SpyInstance;
-  let getCommandOutputSpy: jest.SpyInstance;
-  let hashFilesSpy: jest.SpyInstance;
-  let existsSpy: jest.SpyInstance;
+  let getInputSpy: SpyInstance;
+  let infoSpy: SpyInstance;
+  let warningSpy: SpyInstance;
+  let debugSpy: SpyInstance;
+  let setFailedSpy: SpyInstance;
+  let getStateSpy: SpyInstance;
+  let saveCacheSpy: SpyInstance;
+  let getCommandOutputSpy: SpyInstance;
+  let hashFilesSpy: SpyInstance;
+  let existsSpy: SpyInstance;
 
   beforeEach(() => {
     getInputSpy = jest.spyOn(core, 'getInput');

@@ -8,10 +8,13 @@ import fs from 'fs';
 import cp from 'child_process';
 import osm from 'os';
 import path from 'path';
-import * as main from '../src/main';
-import * as auth from '../src/authutil';
-import OfficialBuilds from '../src/distributions/official_builds/official_builds';
-import {INodeVersion} from '../src/distributions/base-models';
+import {jest} from '@jest/globals';
+import * as main from '../src/main.js';
+import * as auth from '../src/authutil.js';
+import OfficialBuilds from '../src/distributions/official_builds/official_builds.js';
+import {INodeVersion} from '../src/distributions/base-models.js';
+
+type SpyInstance = jest.SpiedFunction<(...args: any[]) => any>;
 
 import nodeTestManifest from './data/versions-manifest.json';
 import nodeTestDist from './data/node-dist-index.json';
@@ -24,28 +27,28 @@ describe('setup-node', () => {
   let inputs = {} as any;
   let os = {} as any;
 
-  let inSpy: jest.SpyInstance;
-  let findSpy: jest.SpyInstance;
-  let findAllVersionsSpy: jest.SpyInstance;
-  let cnSpy: jest.SpyInstance;
-  let logSpy: jest.SpyInstance;
-  let warningSpy: jest.SpyInstance;
-  let getManifestSpy: jest.SpyInstance;
-  let platSpy: jest.SpyInstance;
-  let archSpy: jest.SpyInstance;
-  let dlSpy: jest.SpyInstance;
-  let exSpy: jest.SpyInstance;
-  let cacheSpy: jest.SpyInstance;
-  let dbgSpy: jest.SpyInstance;
-  let whichSpy: jest.SpyInstance;
-  let existsSpy: jest.SpyInstance;
-  let readFileSyncSpy: jest.SpyInstance;
-  let mkdirpSpy: jest.SpyInstance;
-  let execSpy: jest.SpyInstance;
-  let authSpy: jest.SpyInstance;
-  let isCacheActionAvailable: jest.SpyInstance;
-  let getExecOutputSpy: jest.SpyInstance;
-  let getJsonSpy: jest.SpyInstance;
+  let inSpy: SpyInstance;
+  let findSpy: SpyInstance;
+  let findAllVersionsSpy: SpyInstance;
+  let cnSpy: SpyInstance;
+  let logSpy: SpyInstance;
+  let warningSpy: SpyInstance;
+  let getManifestSpy: SpyInstance;
+  let platSpy: SpyInstance;
+  let archSpy: SpyInstance;
+  let dlSpy: SpyInstance;
+  let exSpy: SpyInstance;
+  let cacheSpy: SpyInstance;
+  let dbgSpy: SpyInstance;
+  let whichSpy: SpyInstance;
+  let existsSpy: SpyInstance;
+  let readFileSyncSpy: SpyInstance;
+  let mkdirpSpy: SpyInstance;
+  let execSpy: SpyInstance;
+  let authSpy: SpyInstance;
+  let isCacheActionAvailable: SpyInstance;
+  let getExecOutputSpy: SpyInstance;
+  let getJsonSpy: SpyInstance;
 
   beforeEach(() => {
     // @actions/core

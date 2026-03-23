@@ -1,29 +1,35 @@
 import * as core from '@actions/core';
 import * as cache from '@actions/cache';
 import path from 'path';
-import * as utils from '../src/cache-utils';
+import {fileURLToPath} from 'url';
+import {jest} from '@jest/globals';
+import * as utils from '../src/cache-utils.js';
 import {
   PackageManagerInfo,
   isCacheFeatureAvailable,
   supportedPackageManagers,
   isGhes,
   resetProjectDirectoriesMemoized
-} from '../src/cache-utils';
+} from '../src/cache-utils.js';
 import fs from 'fs';
-import * as cacheUtils from '../src/cache-utils';
+import * as cacheUtils from '../src/cache-utils.js';
 import * as glob from '@actions/glob';
 import {Globber} from '@actions/glob';
-import {MockGlobber} from './mock/glob-mock';
+import {MockGlobber} from './mock/glob-mock.js';
+
+type SpyInstance = jest.SpiedFunction<(...args: any[]) => any>;
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('cache-utils', () => {
   const versionYarn1 = '1.2.3';
 
-  let debugSpy: jest.SpyInstance;
-  let getCommandOutputSpy: jest.SpyInstance;
-  let isFeatureAvailable: jest.SpyInstance;
-  let info: jest.SpyInstance;
-  let warningSpy: jest.SpyInstance;
-  let fsRealPathSyncSpy: jest.SpyInstance;
+  let debugSpy: SpyInstance;
+  let getCommandOutputSpy: SpyInstance;
+  let isFeatureAvailable: SpyInstance;
+  let info: SpyInstance;
+  let warningSpy: SpyInstance;
+  let fsRealPathSyncSpy: SpyInstance;
 
   beforeEach(() => {
     console.log('::stop-commands::stoptoken');
@@ -103,9 +109,9 @@ describe('cache-utils', () => {
   });
 
   describe('getCacheDirectoriesPaths', () => {
-    let existsSpy: jest.SpyInstance;
-    let lstatSpy: jest.SpyInstance;
-    let globCreateSpy: jest.SpyInstance;
+    let existsSpy: SpyInstance;
+    let lstatSpy: SpyInstance;
+    let globCreateSpy: SpyInstance;
 
     beforeEach(() => {
       existsSpy = jest.spyOn(fs, 'existsSync');

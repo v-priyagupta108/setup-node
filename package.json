@@ -3,6 +3,7 @@
   "version": "6.2.0",
   "private": true,
   "description": "setup node action",
+  "type": "module",
   "main": "lib/setup-node.js",
   "engines": {
     "node": ">=24.0.0"
@@ -13,7 +14,7 @@
     "format-check": "prettier --no-error-on-unmatched-pattern --config ./.prettierrc.js --check \"**/*.{ts,yml,yaml}\"",
     "lint": "eslint --config ./.eslintrc.js \"**/*.ts\"",
     "lint:fix": "eslint --config ./.eslintrc.js \"**/*.ts\" --fix",
-    "test": "jest --coverage",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "pre-checkin": "npm run format && npm run lint:fix && npm run build && npm test"
   },
   "repository": {
@@ -33,7 +34,7 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.1",
     "@actions/glob": "^0.5.0",
-    "@actions/http-client": "^2.2.1",
+    "@actions/http-client": "^4.0.0",
     "@actions/io": "^1.0.2",
     "@actions/tool-cache": "^2.0.2",
     "semver": "^7.6.3"
@@ -54,6 +55,7 @@
     "jest-each": "^29.7.0",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.4.2"
   }
 }

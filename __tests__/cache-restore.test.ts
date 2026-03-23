@@ -1,11 +1,40 @@
-import * as core from '@actions/core';
-import * as cache from '@actions/cache';
 import * as path from 'path';
-import * as glob from '@actions/glob';
+import {fileURLToPath} from 'url';
+import {jest} from '@jest/globals';
 import osm from 'os';
 
-import * as utils from '../src/cache-utils';
-import {restoreCache} from '../src/cache-restore';
+type SpyInstance = jest.SpiedFunction<(...args: any[]) => any>;
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+jest.unstable_mockModule('@actions/core', () => ({
+  ...(jest.requireActual('@actions/core') as any),
+  info: jest.fn(),
+  debug: jest.fn(),
+  setOutput: jest.fn(),
+  saveState: jest.fn()
+}));
+
+jest.unstable_mockModule('@actions/cache', () => ({
+  ...(jest.requireActual('@actions/cache') as any),
+  restoreCache: jest.fn()
+}));
+
+jest.unstable_mockModule('@actions/glob', () => ({
+  ...(jest.requireActual('@actions/glob') as any),
+  hashFiles: jest.fn()
+}));
+
+jest.unstable_mockModule('../src/cache-utils.js', () => ({
+  ...(jest.requireActual('../src/cache-utils.js') as any),
+  getCommandOutput: jest.fn()
+}));
+
+const core = await import('@actions/core');
+const cache = await import('@actions/cache');
+const glob = await import('@actions/glob');
+const utils = await import('../src/cache-utils.js');
+const {restoreCache} = await import('../src/cache-restore.js');
 
 describe('cache-restore', () => {
   const packageManagers = ['yarn', 'npm', 'pnpm'] as const;
@@ -53,31 +82,31 @@ describe('cache-restore', () => {
     }
   }
 
-  let saveStateSpy: jest.SpyInstance;
-  let infoSpy: jest.SpyInstance;
-  let debugSpy: jest.SpyInstance;
-  let setOutputSpy: jest.SpyInstance;
-  let getCommandOutputSpy: jest.SpyInstance;
-  let restoreCacheSpy: jest.SpyInstance;
-  let hashFilesSpy: jest.SpyInstance;
-  let archSpy: jest.SpyInstance;
+  let saveStateSpy: SpyInstance;
+  let infoSpy: SpyInstance;
+  let debugSpy: SpyInstance;
+  let setOutputSpy: SpyInstance;
+  let getCommandOutputSpy: SpyInstance;
+  let restoreCacheSpy: SpyInstance;
+  let hashFilesSpy: SpyInstance;
+  let archSpy: SpyInstance;
 
   beforeEach(() => {
     // core
-    infoSpy = jest.spyOn(core, 'info');
+    infoSpy = core.info as unknown as SpyInstance;
     infoSpy.mockImplementation(() => undefined);
 
-    debugSpy = jest.spyOn(core, 'debug');
+    debugSpy = core.debug as unknown as SpyInstance;
     debugSpy.mockImplementation(() => undefined);
 
-    setOutputSpy = jest.spyOn(core, 'setOutput');
+    setOutputSpy = core.setOutput as unknown as SpyInstance;
     setOutputSpy.mockImplementation(() => undefined);
 
-    saveStateSpy = jest.spyOn(core, 'saveState');
+    saveStateSpy = core.saveState as unknown as SpyInstance;
     saveStateSpy.mockImplementation(() => undefined);
 
     // glob
-    hashFilesSpy = jest.spyOn(glob, 'hashFiles');
+    hashFilesSpy = glob.hashFiles as unknown as SpyInstance;
     hashFilesSpy.mockImplementation((pattern: string) => {
       if (pattern.includes('package-lock.json')) {
         return npmFileHash;
@@ -91,7 +120,7 @@ describe('cache-restore', () => {
     });
 
     // cache
-    restoreCacheSpy = jest.spyOn(cache, 'restoreCache');
+    restoreCacheSpy = cache.restoreCache as unknown as SpyInstance;
     restoreCacheSpy.mockImplementation(
       (cachePaths: Array<string>, key: string) => {
         if (!cachePaths || cachePaths.length === 0) {
@@ -110,7 +139,7 @@ describe('cache-restore', () => {
     );
 
     // cache-utils
-    getCommandOutputSpy = jest.spyOn(utils, 'getCommandOutput');
+    getCommandOutputSpy = utils.getCommandOutput as unknown as SpyInstance;
 
     // os
     archSpy = jest.spyOn(osm, 'arch');
