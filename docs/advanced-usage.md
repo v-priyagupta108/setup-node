@@ -74,6 +74,30 @@ steps:
 - run: npm test
 ```
 
+## Allow alpha releases
+
+The `allow-alpha` input defaults to `false`. Set it to `true` to allow an alpha release when no stable release matches the requested version (from `node-version` or `node-version-file`).
+
+When matching, an alpha such as `27.0.0-alpha.5` is treated as its release version, `27.0.0`. This means `27`, `27.x`, `27.0.0`, `^27.0.0`, and `~27.0.0` all select the newest Node.js 27 alpha, so you don't need to pin each alpha release. Standard semver ranges exclude prereleases, so none of these would match `27.0.0-alpha.5` on their own.
+
+Ranges that include an explicit prerelease bound, such as `>=27.0.0-alpha.3`, are not treated this way and use standard semver matching.
+
+Stable releases take precedence: a matching stable release in the tool cache, the [node-versions manifest](https://github.com/actions/node-versions/releases), or the [Node.js distribution index](https://nodejs.org/dist/index.json) is always used before an alpha. Alpha releases are resolved from the distribution index on every run, so new alphas are picked up automatically. A cached alpha is reused only while it is still the newest match.
+
+```yaml
+steps:
+- uses: actions/checkout@v7
+- uses: actions/setup-node@v7
+  with:
+    node-version: '27'
+    allow-alpha: true
+    package-manager-cache: false
+- run: npm ci
+- run: npm test
+```
+
+Exact alpha versions such as `27.0.0-alpha.0.0.0` continue to work without `allow-alpha`. The input does not enable RC, nightly, or V8 canary range matching; those builds retain their existing version syntax and download channels. LTS aliases and `latest`/`current`/`node` retain their existing behavior.
+
 ## Node version file
 
 The `node-version-file` input accepts a path to a file containing the version of Node.js to be used by a project, for example `.nvmrc`, `.node-version`, `.tool-versions`, `mise.toml`, or `package.json`. If both the `node-version` and the `node-version-file` inputs are provided then the `node-version` input is used.
