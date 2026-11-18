@@ -156,9 +156,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Node.js 27 alpha builds are not published for macOS x64.
         os: [ubuntu-latest, windows-latest, macos-latest]
-        # Move to the next alpha line once Node.js 27.0.0 is released.
         node-version: [27, 27.0.0]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
