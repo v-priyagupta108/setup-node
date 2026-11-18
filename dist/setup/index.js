@@ -99126,7 +99126,11 @@ class OfficialBuilds extends BaseDistribution {
     evaluateVersions(versions) {
         if (this.isLatestSyntax(this.nodeInfo.versionSpec)) {
             core_info(`getting latest node version...`);
-            return versions[0];
+            const stableVersion = versions.find(potential => semver_default().prerelease(potential) === null);
+            if (!stableVersion) {
+                throw new Error(`Unable to find a stable Node version for '${this.nodeInfo.versionSpec}' on platform ${this.osPlat} and architecture ${this.nodeInfo.arch}.`);
+            }
+            return stableVersion;
         }
         const version = super.evaluateVersions(versions);
         if (version || !this.nodeInfo.allowAlpha) {

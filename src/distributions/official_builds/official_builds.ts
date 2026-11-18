@@ -209,7 +209,18 @@ export default class OfficialBuilds extends BaseDistribution {
   protected evaluateVersions(versions: string[]): string {
     if (this.isLatestSyntax(this.nodeInfo.versionSpec)) {
       core.info(`getting latest node version...`);
-      return versions[0];
+
+      const stableVersion = versions.find(
+        potential => semver.prerelease(potential) === null
+      );
+
+      if (!stableVersion) {
+        throw new Error(
+          `Unable to find a stable Node version for '${this.nodeInfo.versionSpec}' on platform ${this.osPlat} and architecture ${this.nodeInfo.arch}.`
+        );
+      }
+
+      return stableVersion;
     }
 
     const version = super.evaluateVersions(versions);
