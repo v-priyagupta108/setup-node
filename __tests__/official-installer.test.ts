@@ -792,6 +792,179 @@ describe('setup-node', () => {
     }, 10000);
   });
 
+  describe('allow-alpha', () => {
+    const olderAlpha = '27.0.0-alpha.0.0.9';
+    const newestAlpha = '27.0.0-alpha.0.0.10';
+    const files = ['linux-x64'];
+    let releases: INodeVersion[];
+
+    function expectInstalled(version: string) {
+      const toolPath = path.normalize(`/cache/node/${version}/${os.arch}`);
+      cacheSpy.mockResolvedValue(toolPath);
+      getExecOutputSpy.mockResolvedValue({
+        stdout: `v${version}`,
+        stderr: '',
+        exitCode: 0
+      });
+      return toolPath;
+    }
+
+    beforeEach(() => {
+      os.platform = 'linux';
+      os.arch = 'x64';
+      inputs['allow-alpha'] = 'true';
+      inputs['node-version'] = '27';
+      releases = [
+        {version: `v${olderAlpha}`, files},
+        {version: `v${newestAlpha}`, files},
+        {version: 'v28.0.0-alpha.0.0.0', files},
+        {version: 'v26.1.0', files}
+      ];
+      getJsonSpy.mockImplementation(async () => ({result: releases}));
+      findSpy.mockReturnValue('');
+      dlSpy.mockResolvedValue('/some/temp/path');
+      exSpy.mockResolvedValue('/some/extracted/path');
+    });
+
+    it.each([
+      '27',
+      '27.x',
+      '27.0',
+      '27.0.0',
+      '^27.0.0',
+      '~27.0.0',
+      '>=27.0.0 <28.0.0'
+    ])('selects the newest matching alpha for %s', async versionSpec => {
+      inputs['node-version'] = versionSpec;
+      expectInstalled(newestAlpha);
+
+      await main.run();
+
+      expect(setFailedSpy).not.toHaveBeenCalled();
+      expect(dlSpy).toHaveBeenCalledWith(
+        `https://nodejs.org/dist/v${newestAlpha}/node-v${newestAlpha}-linux-x64.tar.gz`,
+        undefined,
+        undefined
+      );
+    });
+
+    it.each(['27', '27.0.0'])(
+      'prefers a stable release for %s over a newer alpha',
+      async versionSpec => {
+        inputs['node-version'] = versionSpec;
+        releases.push({version: 'v27.0.0', files});
+        expectInstalled('27.0.0');
+
+        await main.run();
+
+        expect(setFailedSpy).not.toHaveBeenCalled();
+        expect(cacheSpy).toHaveBeenCalledWith(
+          '/some/extracted/path',
+          'node',
+          '27.0.0',
+          'x64'
+        );
+      }
+    );
+
+    it.each([undefined, 'false'])(
+      'does not select an alpha and suggests the input when allow-alpha is %s',
+      async allowAlpha => {
+        inputs['allow-alpha'] = allowAlpha;
+        await main.run();
+        expect(setFailedSpy).toHaveBeenCalledWith(
+          "Unable to find Node version '27' for platform linux and architecture x64. A matching alpha release is available; set 'allow-alpha: true' to use it."
+        );
+        expect(dlSpy).not.toHaveBeenCalled();
+      }
+    );
+
+    it('does not suggest allow-alpha when no alpha matches', async () => {
+      inputs['allow-alpha'] = 'false';
+      inputs['node-version'] = '29';
+      await main.run();
+      expect(setFailedSpy).toHaveBeenCalledWith(
+        "Unable to find Node version '29' for platform linux and architecture x64."
+      );
+    });
+
+    it('does not select an alpha outside the requested range', async () => {
+      inputs['node-version'] = '27.1';
+      await main.run();
+      expect(setFailedSpy).toHaveBeenCalledWith(
+        "Unable to find Node version '27.1' for platform linux and architecture x64."
+      );
+    });
+
+    it('ignores prerelease channels other than alpha', async () => {
+      releases = [
+        {version: 'v27.0.0-rc.1', files},
+        {version: 'v27.0.0-nightly20261101', files},
+        {version: 'v27.0.0-v8-canary20261101', files},
+        {version: 'v27.0.0-alphabet.1', files}
+      ];
+      await main.run();
+      expect(setFailedSpy).toHaveBeenCalledWith(
+        "Unable to find Node version '27' for platform linux and architecture x64."
+      );
+    });
+
+    it('respects an explicit prerelease lower bound', async () => {
+      inputs['node-version'] = '>=27.0.0-alpha.0.0.99';
+      await main.run();
+      expect(setFailedSpy).toHaveBeenCalledWith(
+        "Unable to find Node version '>=27.0.0-alpha.0.0.99' for platform linux and architecture x64."
+      );
+      expect(dlSpy).not.toHaveBeenCalled();
+    });
+
+    it('installs an exact alpha version even when a stable release exists', async () => {
+      inputs['node-version'] = olderAlpha;
+      releases.push({version: 'v27.0.0', files});
+      expectInstalled(olderAlpha);
+
+      await main.run();
+
+      expect(setFailedSpy).not.toHaveBeenCalled();
+      expect(cacheSpy).toHaveBeenCalledWith(
+        '/some/extracted/path',
+        'node',
+        olderAlpha,
+        'x64'
+      );
+    });
+
+    it('reuses a cached alpha instead of downloading it again', async () => {
+      const toolPath = expectInstalled(newestAlpha);
+      findSpy.mockImplementation((_tool, version) =>
+        version === `v${newestAlpha}` ? toolPath : ''
+      );
+
+      await main.run();
+
+      expect(setFailedSpy).not.toHaveBeenCalled();
+      expect(dlSpy).not.toHaveBeenCalled();
+      expect(addPathSpy).toHaveBeenCalledWith(path.join(toolPath, 'bin'));
+    });
+
+    it('downloads a newer alpha when only an older alpha is cached', async () => {
+      findSpy.mockImplementation((_tool, version) =>
+        version === `v${olderAlpha}` ? `/cache/node/${olderAlpha}/x64` : ''
+      );
+      expectInstalled(newestAlpha);
+
+      await main.run();
+
+      expect(setFailedSpy).not.toHaveBeenCalled();
+      expect(cacheSpy).toHaveBeenCalledWith(
+        '/some/extracted/path',
+        'node',
+        newestAlpha,
+        'x64'
+      );
+    });
+  });
+
   describe('LTS version', () => {
     useRetryTimers();
 
