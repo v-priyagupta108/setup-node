@@ -76,15 +76,11 @@ steps:
 
 ## Allow alpha releases
 
-The `allow-alpha` input defaults to `false`. Set it to `true` to allow an alpha release when no stable release matches the requested version (from `node-version` or `node-version-file`).
+The `allow-alpha` input defaults to `false`. Set it to `true` to use an alpha release when no stable release matches the requested version.
 
-When matching, an alpha such as `27.0.0-alpha.5` is treated as its release version, `27.0.0`. This means `27`, `27.x`, `27.0.0`, `^27.0.0`, and `~27.0.0` all select the newest Node.js 27 alpha, so you don't need to pin each alpha release. Standard semver ranges exclude prereleases, so none of these would match `27.0.0-alpha.5` on their own.
+Alphas are matched by their release version, so `27`, `27.x`, `27.0.0`, `^27.0.0`, and `~27.0.0` all select the newest Node.js 27 alpha. Ranges with an explicit prerelease bound, such as `>=27.0.0-alpha.3`, use standard semver matching.
 
-Ranges that include an explicit prerelease bound, such as `>=27.0.0-alpha.3`, are not treated this way and use standard semver matching.
-
-Stable releases take precedence: a matching stable release in the tool cache, the [node-versions manifest](https://github.com/actions/node-versions/releases), or the [Node.js distribution index](https://nodejs.org/dist/index.json) is always used before an alpha. For specs such as `27`, alphas are resolved from the distribution index on every run, so new alphas are picked up automatically and a cached alpha is reused only while it is still the newest match. For ranges with an explicit prerelease bound, a matching alpha that is already in the tool cache is used without checking for a newer one.
-
-Alpha builds are not published for every platform. For example, Node.js 27 alphas are not available for macOS x64, so the action fails with `Unable to find Node version` on those runners.
+Alpha builds are not published for every platform. For example, Node.js 27 alphas are not available for macOS x64, so setup fails on those runners.
 
 ```yaml
 steps:
@@ -98,7 +94,7 @@ steps:
 - run: npm test
 ```
 
-Exact alpha versions such as `27.0.0-alpha.0.0.0` continue to work without `allow-alpha`. The input does not enable RC, nightly, or V8 canary range matching; those builds retain their existing version syntax and download channels. LTS aliases and `latest`/`current`/`node` retain their existing behavior.
+Exact alpha versions such as `27.0.0-alpha.0.0.0` work without `allow-alpha`.
 
 ## Node version file
 
