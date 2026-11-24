@@ -800,12 +800,12 @@ describe('setup-node', () => {
 
     function expectInstalled(version: string) {
       const toolPath = path.normalize(`/cache/node/${version}/${os.arch}`);
-      cacheSpy.mockResolvedValue(toolPath);
-      getExecOutputSpy.mockResolvedValue({
+      cacheSpy.mockImplementation(async () => toolPath);
+      getExecOutputSpy.mockImplementation(async () => ({
         stdout: `v${version}`,
         stderr: '',
         exitCode: 0
-      });
+      }));
       return toolPath;
     }
 
@@ -822,8 +822,8 @@ describe('setup-node', () => {
       ];
       getJsonSpy.mockImplementation(async () => ({result: releases}));
       findSpy.mockReturnValue('');
-      dlSpy.mockResolvedValue('/some/temp/path');
-      exSpy.mockResolvedValue('/some/extracted/path');
+      dlSpy.mockImplementation(async () => '/some/temp/path');
+      exSpy.mockImplementation(async () => '/some/extracted/path');
     });
 
     it.each([
@@ -876,6 +876,24 @@ describe('setup-node', () => {
           "Unable to find Node version '27' for platform linux and architecture x64. A matching alpha release is available; set 'allow-alpha: true' to use it."
         );
         expect(dlSpy).not.toHaveBeenCalled();
+      }
+    );
+
+    it.each(['latest', 'current', 'node'])(
+      'installs the newest stable release for %s',
+      async versionSpec => {
+        inputs['node-version'] = versionSpec;
+        expectInstalled('26.1.0');
+
+        await main.run();
+
+        expect(setFailedSpy).not.toHaveBeenCalled();
+        expect(cacheSpy).toHaveBeenCalledWith(
+          '/some/extracted/path',
+          'node',
+          '26.1.0',
+          'x64'
+        );
       }
     );
 

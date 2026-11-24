@@ -82,7 +82,9 @@ When matching, an alpha such as `27.0.0-alpha.5` is treated as its release versi
 
 Ranges that include an explicit prerelease bound, such as `>=27.0.0-alpha.3`, are not treated this way and use standard semver matching.
 
-Stable releases take precedence: a matching stable release in the tool cache, the [node-versions manifest](https://github.com/actions/node-versions/releases), or the [Node.js distribution index](https://nodejs.org/dist/index.json) is always used before an alpha. Alpha releases are resolved from the distribution index on every run, so new alphas are picked up automatically. A cached alpha is reused only while it is still the newest match.
+Stable releases take precedence: a matching stable release in the tool cache, the [node-versions manifest](https://github.com/actions/node-versions/releases), or the [Node.js distribution index](https://nodejs.org/dist/index.json) is always used before an alpha. For specs such as `27`, alphas are resolved from the distribution index on every run, so new alphas are picked up automatically and a cached alpha is reused only while it is still the newest match. For ranges with an explicit prerelease bound, a matching alpha that is already in the tool cache is used without checking for a newer one.
+
+Alpha builds are not published for every platform. For example, Node.js 27 alphas are not available for macOS x64, so the action fails with `Unable to find Node version` on those runners.
 
 ```yaml
 steps:
@@ -91,7 +93,7 @@ steps:
   with:
     node-version: '27'
     allow-alpha: true
-    package-manager-cache: false
+    package-manager-cache: false # Disable automatic npm caching if not required
 - run: npm ci
 - run: npm test
 ```
