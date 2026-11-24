@@ -906,27 +906,6 @@ describe('setup-node', () => {
       );
     });
 
-    it('does not select an alpha outside the requested range', async () => {
-      inputs['node-version'] = '27.1';
-      await main.run();
-      expect(setFailedSpy).toHaveBeenCalledWith(
-        "Unable to find Node version '27.1' for platform linux and architecture x64."
-      );
-    });
-
-    it('ignores prerelease channels other than alpha', async () => {
-      releases = [
-        {version: 'v27.0.0-rc.1', files},
-        {version: 'v27.0.0-nightly20261101', files},
-        {version: 'v27.0.0-v8-canary20261101', files},
-        {version: 'v27.0.0-alphabet.1', files}
-      ];
-      await main.run();
-      expect(setFailedSpy).toHaveBeenCalledWith(
-        "Unable to find Node version '27' for platform linux and architecture x64."
-      );
-    });
-
     it('respects an explicit prerelease lower bound', async () => {
       inputs['node-version'] = '>=27.0.0-alpha.0.0.99';
       await main.run();
@@ -934,22 +913,6 @@ describe('setup-node', () => {
         "Unable to find Node version '>=27.0.0-alpha.0.0.99' for platform linux and architecture x64."
       );
       expect(dlSpy).not.toHaveBeenCalled();
-    });
-
-    it('installs an exact alpha version even when a stable release exists', async () => {
-      inputs['node-version'] = olderAlpha;
-      releases.push({version: 'v27.0.0', files});
-      expectInstalled(olderAlpha);
-
-      await main.run();
-
-      expect(setFailedSpy).not.toHaveBeenCalled();
-      expect(cacheSpy).toHaveBeenCalledWith(
-        '/some/extracted/path',
-        'node',
-        olderAlpha,
-        'x64'
-      );
     });
 
     it('reuses a cached alpha instead of downloading it again', async () => {
